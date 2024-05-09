@@ -20,8 +20,7 @@ Este módulo sirve para la implementación de leyes de control.
             etiquetadas como: velocidad del péndulo, señal de control, referencia de posición del motor, referencia de velocidad del motor.
             referencia de posición del péndulo, referencia de velocidad del péndulo, señal auxiliar 1 y señal auxiliar 2.
             Las señales auxiliares pueden emplearse para visualizar cualquier variable deseada, por ejemplo, la señal de error.
-            En caso de no emplearse, deben asignarse en cero tanto en "control_law" como en "control_law_offline".
-    Add                  
+            En caso de no emplearse, deben asignarse en cero tanto en "control_law" como en "control_law_offline".               
 """
 import numpy as np
 import random
