@@ -25,72 +25,10 @@ Este módulo sirve para la implementación de leyes de control.
 import numpy as np
 import random
 import math
-from scipy import signal
 
 import matplotlib.pyplot as plt
 
-class TransferFunction:
-    def __init__(self, num, den, y0=None, u0=None):
-        '''Funcion de transferencia de un sistema:\n
-        an*y^(n) + ... + a1*y' + a0*y = bm*u^(m) + ... + b1*u' + b0*u\n\n
-        den = [an, ..., a1, a0];    num = [bm, ..., b1, b0]; .\n\n
-        y0 = [y'(0),..., y^(n)(0)]; u0 = [u'(0),..., u^(m)(0)]'''
-        self.m = len(num)-1 
-        self.n = len(den)-1
-        self.a = den[::-1]
-        self.b = num[::-1]
-
-        if u0 is None:
-            self.u0 = np.zeros(self.m + 1) # dimensión adicional para incluir a u(t).
-        else:
-            self.u0 = np.insert(u0,0,0) # dimensión adicional para incluir a u(t).
-
-        if y0 is None:
-            self.y0 = np.zeros(self.n + 1)
-        else:
-            self.y0 = np.array([y0])
-
-    def aplicar_tf(self, ut, dt=0.001):
-        '''Aplica la función de transferencia a la señal: ut\n\n
-        Regresa la salida en el dominio del tiempo.'''
-        self.u0[0] = ut
-
-        u_term = 0
-        for i in range(self.m + 1):
-            for j in range(i, self.m + 1):
-                u_term += (-1)**i*math.comb(j,i)*self.b[j]*self.u0[i]/(dt**j)
-        
-        y_term = 0
-        for i in range(self.n):
-            for j in range(i, self.n):
-                y_term += (-1)**i*math.comb(j,i)*self.a[j]*self.y0[i]/(dt**j)
-    
-        y_dif = 0
-        for i in range(1, self.n+1):
-            y_dif += (-1)**i*math.comb(self.n,i)*self.y0[i-1]
-
-        yt = dt**self.n*(u_term-y_term)/self.a[self.n] - y_dif
-
-        self.u0 = np.roll(self.u0, 1)
-        self.y0 = np.roll(self.y0, 1)
-        #if len(self.y0) > 0: 
-        self.y0[0] = yt
-        #else:
-        #    self.y0 = np.array([yt])
-
-        return yt
-
-class ZeroHolder:
-    def __init__(self, sample_time=0.05):
-        self.sample_time = sample_time
-        self.last_st = 0.0
-
-    def isTime(self, ti):
-        st = ti - ti % self.sample_time
-        if st != self.last_st:
-            self.last_st = st
-            return True
-        return False
+from ReTimeSystems import TransferFunction, ZeroHolder, ruido_blanco_de_banda_limitada
 
 # Variables globales
 
@@ -126,15 +64,17 @@ def DC_motor_PD(pm, vm, r):
 
 def control_law(ti, pm, vm, pp, cm, vp=0, u=0, r1=0, r2=0, r3=0, r4=0, a1=0, a2=0):
     #r1 = square_wave(1, 5, ti) # Señal de onda cuadrada
-    r2 = ruido_blanco_de_banda_limitada(ti, 0.1, 0, 200, 1, 500) # Señal rica en frecuencias
+    r1 = ruido_blanco_de_banda_limitada(ti, 0.1, 0, 200) # Señal rica en frecuencias
 
-    #r3 = filtro_u0.aplicar_tf(r1)
-    r4 = filtro_u1.aplicar_tf(r2)
+    #r2 = filtro_u0.aplicar_tf(r1)
+    r2 = filtro_u1.aplicar_tf(r1)
 
-    u = DC_motor_PD(pm, vm, r4) #sistema estable
+    u = DC_motor_PD(pm, vm, r2) #sistema estable
 
+    # B
     ypp_f = filtro_i1.aplicar_tf(pm)
 
+    # A
     yp_f = filtro_i2.aplicar_tf(pm)
     uf = filtro_i3.aplicar_tf(u)
 
@@ -210,32 +150,13 @@ def funcion_adicional_fx():
     outStr += "Identificación paramétrica" + "\n\n"
     outStr += "a = " + str(param[0]) + "\n"
     outStr += "b = " + str(param[1]) + "\n\n"
-    outStr += "condicionamiento = " + str(cond) + "\n\n"
-    outStr += "Buffer interno liberado: " + str(len(t_span)) + "\n"
+    #outStr += "condicionamiento = " + str(cond) + "\n\n"
+    #outStr += "Buffer interno liberado: " + str(len(t_span)) + "\n"
     
     return outStr
 
-#--------------->  Operadores, Funciones y Señales genericas:
-def derivada(f, ti, *args):
-    '''Derivada por diferencia finitas hacia a tras.\n Requiere almacenar t_span.\n fp=derivada(señal_de_ejemplo,ti)'''
-    global t_span
-    if len(t_span) > 1: 
-        fp = ( f(ti, *args) - f(t_span[-2], *args) ) / ( ti-t_span[-2] )
-    else:
-        fp = 0 # np.nan # omitirá el primer elemento.
-    return fp
 
-def integral(f, ti, *args): 
-    '''Integral mediante el método del trapecio.\n Requiere almacenar t_span y fi_array.\n fi=integral(señal_de_ejemplo,ti)'''
-    global t_span
-    if len(t_span) > 1: 
-        fi = fi_array[-1] + (ti-t_span[-2])*(f(ti,*args)+f(t_span[-2],*args))/2
-        fi_array.append(fi)
-    else:
-        fi_array.append(0) # inicializa en 0
-        fi = 0 #np.nan # omitirá graficar el primer elemento.
-    return fi
-
+#-----------------------------------------------------------------------------------------------------
 def ruido_blanco_de_banda_limitada(ti, step, min_freq, max_freq, potencia=1, num_freq=1024, seed=120793):
     '''Ruido blanco de banda limitada.'''
     global t_span
@@ -258,6 +179,26 @@ def square_wave(t, amplitud=1, frec=1, fase=0):
     square = amplitud * np.sign(np.sin(2 * np.pi * frec * t + fase))
     return square
 
+def derivada(f, ti, *args):
+    '''Derivada por diferencia finitas hacia a tras.\n Requiere almacenar t_span.\n fp=derivada(señal_de_ejemplo,ti)'''
+    global t_span
+    if len(t_span) > 1: 
+        fp = ( f(ti, *args) - f(t_span[-2], *args) ) / ( ti-t_span[-2] )
+    else:
+        fp = 0 # np.nan # omitirá el primer elemento.
+    return fp
+
+def integral(f, ti, *args): 
+    '''Integral mediante el método del trapecio.\n Requiere almacenar t_span y fi_array.\n fi=integral(señal_de_ejemplo,ti)'''
+    global t_span
+    if len(t_span) > 1: 
+        fi = fi_array[-1] + (ti-t_span[-2])*(f(ti,*args)+f(t_span[-2],*args))/2
+        fi_array.append(fi)
+    else:
+        fi_array.append(0) # inicializa en 0
+        fi = 0 #np.nan # omitirá graficar el primer elemento.
+    return fi
+
 def señal_de_ejemplo(ti):
     '''
     r1 = señal_de_ejemplo(ti)\n
@@ -267,7 +208,7 @@ def señal_de_ejemplo(ti):
     # Integral: ti + np.exp(-ti) - 0.02*np.cos(5*ti) - 49/50
     return 1 - np.exp(-ti) + 0.1*np.sin(5*ti)
 
-#-----------------------------------------------------------------------------------------------------
+
 
 def debug_function():
     time_span = np.linspace(0, 10, 10000)
