@@ -28,7 +28,7 @@ import math
 
 import matplotlib.pyplot as plt
 
-from ReTimeSystems import TransferFunction, ZeroHolder, ruido_blanco_de_banda_limitada
+from ReTimeSystems import TransferFunction, ZeroHolder
 
 # Variables globales
 
