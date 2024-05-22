@@ -24,7 +24,6 @@ Este módulo sirve para la implementación de leyes de control.
 """
 import numpy as np
 import random
-import math
 
 import matplotlib.pyplot as plt
 
@@ -51,7 +50,8 @@ zH = ZeroHolder()
 A = [[],[]]
 B = []
 
-k_p, k_d = (4.000, 0.175)
+#k_p, k_d = (4.000, 0.175) % official test values.
+k_p, k_d = (20.0, 0.95)
 
 # funciones adicionales
 
@@ -63,12 +63,11 @@ def DC_motor_PD(pm, vm, r):
 #----------------> Funciones de vinculación
 
 def control_law(ti, pm, vm, pp, cm, vp=0, u=0, r1=0, r2=0, r3=0, r4=0, a1=0, a2=0):
-    #r1 = square_wave(1, 5, ti) # Señal de onda cuadrada
-    r1 = ruido_blanco_de_banda_limitada(ti, 0.1, 0, 200) # Señal rica en frecuencias
+    r1 = square_wave(ti, 1, 0.1, 0) # Señal de onda cuadrada
+    #r1 = ruido_blanco_de_banda_limitada(ti, 0.1, 0, 200) # Señal rica en frecuencias
 
-    #r2 = filtro_u0.aplicar_tf(r1)
-    r2 = filtro_u1.aplicar_tf(r1)
-
+    r2 = filtro_u0.aplicar_tf(r1)
+    
     u = DC_motor_PD(pm, vm, r2) #sistema estable
 
     # B
