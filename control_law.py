@@ -51,7 +51,7 @@ A = [[],[]]
 B = []
 
 #k_p, k_d = (4.000, 0.175) % official test values.
-k_p, k_d = (20.0, 0.95)
+k_p, k_d = (20.25, 0.95)
 
 # funciones adicionales
 
