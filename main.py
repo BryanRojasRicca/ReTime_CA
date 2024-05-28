@@ -48,7 +48,7 @@ class QubeServo2():
         # Inicializar un objeto Qube-Servo 2 HIL, y verificar si es válido
         self.qube = HIL("qube_servo2_usb", id)
         if self.qube.is_valid():
-            print("Qube-Servo operativo")
+            print("Qube-Servo 2 ready.")
             # Definir la cuenta en 0 de los encoders 0 y 1.
             counts = np.array([0, 0], dtype=np.int32)
             self.qube.set_encoder_counts(self.r_encoder_channels, self.r_num_encoder_channels, counts)
@@ -220,22 +220,22 @@ def adquisicion_de_datos(q_and_f):
                 q_and_f.qfx_info.put("Output error: funcion_adicional_fx() -> str")
 
             if len(t_span) > 2: 
-                info = "Tiempo inicial: " + str(t_span[0]) + "\n"
-                info += "Tiempo final: " + str(t_span[-1]) + "\n \n"
+                info = "Starting time: " + str(t_span[0]) + "\n"
+                info += "Ending time: " + str(t_span[-1]) + "\n \n"
                 
-                info += "No. de iteraciones: " + str(np.size(t_span)) + "\n \n"
+                info += "Steps: " + str(np.size(t_span)) + "\n \n"
                 pasos = np.diff(t_span)
-                info += "Paso promedio: " + str(np.mean(pasos)) + "\n"
-                info += "Desviación estandar: " + str(np.std(pasos)) + "\n \n"
+                info += "Avarage of sampling period: " + str(np.mean(pasos)) + "\n"
+                info += "Standar deviation: " + str(np.std(pasos)) + "\n \n"
 
-                info += "Paso mínimo: " + str(np.min(pasos)) + "\n"
-                info += "Paso máximo: " + str(np.max(pasos)) + "\n \n"
+                info += "Minimum period: " + str(np.min(pasos)) + "\n"
+                info += "Maximum period: " + str(np.max(pasos)) + "\n \n"
 
                 error = np.abs(pasos - periodo_de_muestreo_deseado)
-                info += "Superiores al 2'%' de error: " + str( np.sum(error > 0.000020) ) + "\n"
-                info += "Superiores al 1'%' de error: " + str( np.sum(error > 0.000010) ) + "\n"
-                info += "Inferiores al 0.2'%' de error: " + str(np.sum(error < 0.000002) ) + "\n"
-                info += "Inferiores al 0.1'%' de error: " + str(np.sum(error < 0.000001) ) + "\n"
+                info += "Periods with errors grether than 2 %: " + str( np.sum(error > 0.000020) ) + "\n"
+                info += "Periods with errors grether that 1 %: " + str( np.sum(error > 0.000010) ) + "\n"
+                info += "Periods with error less that 0.2 %: " + str(np.sum(error < 0.000002) ) + "\n"
+                info += "Periods with error less that 0.1 %: " + str(np.sum(error < 0.000001) ) + "\n"
             else:
                 info = "No hay información disponible."
 
@@ -292,7 +292,7 @@ class miVentana(QMainWindow):
         self.a2_aux = []
 
         self.setGeometry( 200,200, 800,450 )
-        self.setWindowTitle("DCA - Leyes de control en QUBE-Servo 2")
+        self.setWindowTitle("ReTime for control applications")
 
         widget = QWidget()
         layout = QGridLayout()
@@ -304,19 +304,19 @@ class miVentana(QMainWindow):
         self.timerErrorQube.timeout.connect(self.verificar_error)
 
         self.pdm_msgBox = QMessageBox()
-        self.pdm_msgBox.setWindowTitle("Periodo de muestreo")
+        self.pdm_msgBox.setWindowTitle("Sampling period") #Periodo de muestreo
         self.pdm_msgBox.setText("No hay información disponible.")
 
         self.fx_msgBox = QMessageBox()
-        self.fx_msgBox.setWindowTitle("Función adicional")
+        self.fx_msgBox.setWindowTitle("Aditional function") #Función adicional
         self.fx_msgBox.setText("No hay información disponible.")
 
         # Crear elementos
-        lb_info1 = QLabel("Fabricante:")
-        lb_info2 = QLabel("Producto:")
-        lb_info3 = QLabel("Modelo:")
+        lb_info1 = QLabel("Manufacturer:")
+        lb_info2 = QLabel("Product:")
+        lb_info3 = QLabel("Model:")
         lb_info4 = QLabel("Firmware:")
-        lb_info5 = QLabel("No. de Serie:")
+        lb_info5 = QLabel("Serial number:")
 
         self.info1 = QLabel("_________")
         self.info2 = QLabel("_________")
@@ -324,13 +324,13 @@ class miVentana(QMainWindow):
         self.info4 = QLabel("_________")
         self.info5 = QLabel("_________")
 
-        lb_tiempo = QLabel("Tiempo de ejecución:")
-        lb_pdm = QLabel("Periodo de muestreo:")
+        lb_tiempo = QLabel("Running time:")
+        lb_pdm = QLabel("Sampling period:")
 
         in_tiempo = QLabel("10 s")
         in_pdm =    QLabel("1e-3 s")
 
-        btn_conectar = QPushButton("Conectar")
+        btn_conectar = QPushButton("Connect")
         btn_conectar.clicked.connect(self.conectar_qube)
 
         btn_comenzar = QPushButton("►")
@@ -347,18 +347,18 @@ class miVentana(QMainWindow):
         btn_fx = QPushButton("f(x)")
         btn_fx.clicked.connect(self.show_fx_info)
 
-        self.check_1 = QCheckBox("Posición del motor")
-        self.check_2 = QCheckBox("Velocidad del motor")
-        self.check_3 = QCheckBox("Posición del péndulo")
-        self.check_4 = QCheckBox("Velocidad del péndulo")
-        self.check_5 = QCheckBox("Señal de control")
-        self.check_6 = QCheckBox("Corriente del motor")
-        self.check_7 = QCheckBox("Referencia de posición del motor")
-        self.check_8 = QCheckBox("Referencia de posición del motor")
-        self.check_9 = QCheckBox("Referencia de posición del motor")
-        self.check_10 = QCheckBox("Referencia de posición del motor")
-        self.check_11 = QCheckBox("Señal auxiliar 1")
-        self.check_12 = QCheckBox("Señal auxiliar 1")
+        self.check_1 = QCheckBox("Motor position")#("Posición del motor")
+        self.check_2 = QCheckBox("Motor speed")#("Velocidad del motor")
+        self.check_3 = QCheckBox("Pendulum position")#("Posición del péndulo")
+        self.check_4 = QCheckBox("Pendulum speed")#("Velocidad del péndulo")
+        self.check_5 = QCheckBox("Control signal")#("Señal de control")
+        self.check_6 = QCheckBox("Motor current")#("Corriente del motor")
+        self.check_7 = QCheckBox("Reference signal 1")#("Referencia de posición del motor")
+        self.check_8 = QCheckBox("Reference signal 2")#("Referencia de posición del motor")
+        self.check_9 = QCheckBox("Reference signal 3")#("Referencia de posición del motor")
+        self.check_10 = QCheckBox("Reference signal 4")#("Referencia de posición del motor")
+        self.check_11 = QCheckBox("Auxiliar signal 1")#("Señal auxiliar 1")
+        self.check_12 = QCheckBox("Auxiliar signal 2")#("Señal auxiliar 1")
 
         self.check_1.setChecked(True)
 
@@ -393,7 +393,7 @@ class miVentana(QMainWindow):
 
         self.sc.axes.grid(True)
         
-        self.msj = QLabel("Iniciado.")
+        self.msj = QLabel("Initializing.")
         self.progressBar = QProgressBar()
         
         #Colocar elementos
@@ -445,7 +445,7 @@ class miVentana(QMainWindow):
         self.setCentralWidget(widget)   
 
     def comenzar_ejecucion(self):
-        self.msj.setText("Ejecutando...")
+        self.msj.setText("Running...")
         self.q_and_f.fIniciar.value = True
 
         self.line_pm.set_data([], [])  # Borra los datos de cada línea
@@ -476,7 +476,7 @@ class miVentana(QMainWindow):
         if not self.q_and_f.qt.empty() and not self.q_and_f.qpm.empty():
             if not self.q_and_f.fDetener.value:
                 self.progressBar.setValue(100)
-                self.msj.setText("Terminado.")
+                self.msj.setText("Finished.")
             else:
                 self.q_and_f.fDetener.value = False
             
@@ -558,7 +558,7 @@ class miVentana(QMainWindow):
 
     def detener_ejecucion(self):
         self.q_and_f.fDetener.value = True
-        self.msj.setText("Detenido")
+        self.msj.setText("Stoped")
     
     def show_pdm_info(self):
         if not self.q_and_f.qinfo.empty():
