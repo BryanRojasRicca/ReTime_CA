@@ -1,2 +1,2 @@
 # ReTime_CA
-An open-source tool for real-time control applications.
+An open-source Python-based tool for real-time control applications.
