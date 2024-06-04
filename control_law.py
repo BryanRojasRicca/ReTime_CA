@@ -51,13 +51,14 @@ A = [[],[]]
 B = []
 
 #k_p, k_d = (4.000, 0.175) % official test values.
-k_p, k_d = (20.25, 0.95)
+k_p, k_d = (400, 31.95)
+bval = 171.7
 
 # funciones adicionales
 
 def DC_motor_PD(pm, vm, r):
     error = r - pm
-    u = k_p * error - k_d * vm
+    u = (k_p/bval) * error - (k_d/bval) * vm
     return u
 
 #----------------> Funciones de vinculación
